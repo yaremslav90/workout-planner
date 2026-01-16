@@ -1,0 +1,48 @@
+import type { Client } from "../types/client";
+
+export const seedClients: Client[] = [
+  {
+    id: "c1",
+    firstName: "Kostya",
+    lastName: "Gorun",
+    birthDate: "21.11.1987",
+    heightCm: 186,
+    status: "active",
+    weightKg: 90,
+    goal: "Weight Loss",
+    updatedAt: "16.01.2026",
+  },
+  {
+    id: "c2",
+    firstName: "Galyna",
+    lastName: "-",
+    birthDate: "24.09.1989",
+    heightCm: 170,
+    status: "active",
+    weightKg: 60,
+    goal: "To be in shape",
+    updatedAt: "16.01.2026",
+  },
+  {
+    id: "c3",
+    firstName: "Vitaliy",
+    lastName: "Sozanskiy",
+    birthDate: "08.12.1982",
+    heightCm: 180,
+    status: "active",
+    weightKg: 84,
+    goal: "Weight Loss",
+    updatedAt: "16.01.2026",
+  },
+  {
+    id: "c4",
+    firstName: "Maksim",
+    lastName: "Skopyk",
+    birthDate: "12.06.1990",
+    heightCm: 184,
+    status: "paused",
+    weightKg: 98,
+    goal: "Weight Loss",
+    updatedAt: "16.01.2026",
+  },
+];
