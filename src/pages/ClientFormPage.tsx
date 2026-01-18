@@ -1,7 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import type { ClientStatus, Client } from "../types/client";
-import { loadClients, saveClients } from "../storage/clientsStorage";
+import {
+  getClientById,
+  loadClients,
+  saveClients,
+  updateClientById,
+} from "../storage/clientsStorage";
 
 function makeId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -11,19 +16,54 @@ function makeId() {
 
 export default function ClientFormPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = useMemo(() => Boolean(id), [id]);
+  const existingClient = useMemo(() => {
+    if (!id) return undefined;
+    return getClientById(id);
+  }, [id]);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [heightCm, setHeightCm] = useState(170);
-  const [weightKg, setWeightKg] = useState(70);
-  const [status, setStatus] = useState<ClientStatus>("active");
-  const [goal, setGoal] = useState("");
+  if (isEditMode && !existingClient) {
+    return (
+      <div>
+        <h1>Client not found</h1>
+        <button onClick={() => navigate("/")}>Back to home</button>
+      </div>
+    );
+  }
+
+  const [firstName, setFirstName] = useState(existingClient?.firstName ?? "");
+  const [lastName, setLastName] = useState(existingClient?.lastName ?? "");
+  const [heightCm, setHeightCm] = useState(existingClient?.heightCm ?? 170);
+  const [weightKg, setWeightKg] = useState(existingClient?.weightKg ?? 70);
+  const [status, setStatus] = useState<ClientStatus>(
+    existingClient?.status ?? "active"
+  );
+  const [goal, setGoal] = useState(existingClient?.goal ?? "");
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!firstName.trim() || !lastName.trim()) {
       alert("First name and last name are required.");
+      return;
+    }
+
+    if (isEditMode && id) {
+      const updated = updateClientById(id, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        heightCm,
+        weightKg,
+        status,
+        goal: goal.trim(),
+      });
+      if (!updated) {
+        alert("Client not found.");
+        navigate("/");
+        return;
+      }
+      navigate(`/clients/${id}`);
       return;
     }
 
