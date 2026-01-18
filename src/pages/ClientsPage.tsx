@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { seedClients } from "../data/seed";
 import { Link } from "react-router-dom";
 import type { Client } from "../types/client";
-import { loadClients, saveClients } from "../storage/clientsStorage";
+import {
+  loadClients,
+  saveClients,
+  deleteClientById,
+} from "../storage/clientsStorage";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>(() => {
@@ -25,7 +29,7 @@ export default function ClientsPage() {
   const handleDelete = (id: string) => {
     const ok = window.confirm("Delete this client?");
     if (!ok) return;
-    const updatedRows = clients.filter((c) => c.id !== id);
+    const updatedRows = deleteClientById(id);
     setClients(updatedRows);
   };
   return (

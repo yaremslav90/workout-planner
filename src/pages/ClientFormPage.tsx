@@ -42,7 +42,7 @@ export default function ClientFormPage() {
     const next = [newClient, ...current];
     saveClients(next);
 
-    navigate("/"); // повертаємось на таблицю
+    navigate("/");
   }
 
   return (
