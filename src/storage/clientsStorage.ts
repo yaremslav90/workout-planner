@@ -42,7 +42,7 @@ export function getClientById(id: string): Client | undefined {
 
 export function updateClientById(
   id: string,
-  patch: Partial<Client>
+  patch: Partial<Client>,
 ): Client | undefined {
   const current = loadClients();
   const index = current.findIndex((c) => c.id === id);

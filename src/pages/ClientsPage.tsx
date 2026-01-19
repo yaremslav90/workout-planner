@@ -8,8 +8,49 @@ import {
   deleteClientById,
 } from "../storage/clientsStorage";
 
-type sortKey = "name" | "updatedAt";
-type sortDir = "asc" | "desc";
+const TABLE_PREFS_KEY = "clients_table_prefs_v1";
+
+type SortKey = "name" | "updatedAt";
+type SortDir = "asc" | "desc";
+type TablePrefs = {
+  query: string;
+  status: "all" | ClientStatus;
+  sortKey: SortKey;
+  sortDir: SortDir;
+};
+
+function loadTablePrefs(): TablePrefs {
+  const raw = window.localStorage.getItem(TABLE_PREFS_KEY);
+  if (!raw) {
+    return {
+      query: "",
+      status: "all",
+      sortKey: "updatedAt",
+      sortDir: "desc",
+    };
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<TablePrefs>;
+    return {
+      query: parsed.query ?? "",
+      status: parsed.status ?? "all",
+      sortKey: parsed.sortKey ?? "updatedAt",
+      sortDir: parsed.sortDir ?? "desc",
+    };
+  } catch {
+    return {
+      query: "",
+      status: "all",
+      sortKey: "updatedAt",
+      sortDir: "desc",
+    };
+  }
+}
+
+// const query = prefs.query;
+// const status = prefs.status;
+// const sortKey = prefs.sortKey;
+// const sortDir = prefs.sortDir;
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>(() => {
@@ -18,11 +59,17 @@ export default function ClientsPage() {
     saveClients(seedClients);
     return seedClients;
   });
+  const [prefs, setPrefs] = useState<TablePrefs>(() => loadTablePrefs());
+  const { query, status, sortKey, sortDir } = prefs;
 
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"all" | ClientStatus>("all");
-  const [sortKey, setSortKey] = useState<sortKey>("updatedAt");
-  const [sortDir, setSortDir] = useState<sortDir>("desc");
+  useEffect(() => {
+    window.localStorage.setItem(TABLE_PREFS_KEY, JSON.stringify(prefs));
+  }, [prefs]);
+
+  // const [query, setQuery] = useState("");
+  // const [status, setStatus] = useState<"all" | ClientStatus>("all");
+  // const [sortKey, setSortKey] = useState<sortKey>("updatedAt");
+  // const [sortDir, setSortDir] = useState<sortDir>("desc");
 
   useEffect(() => {
     const stored = loadClients();
@@ -40,13 +87,13 @@ export default function ClientsPage() {
     const updatedRows = deleteClientById(id);
     setClients(updatedRows);
   };
-  function toggleSort(nextKey: sortKey) {
-    if (sortKey === nextKey) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(nextKey);
-      setSortDir("asc");
-    }
+  function toggleSort(nextKey: SortKey) {
+    setPrefs((p) => {
+      if (p.sortKey === nextKey) {
+        return { ...p, sortDir: p.sortDir === "asc" ? "desc" : "asc" };
+      }
+      return { ...p, sortKey: nextKey, sortDir: "asc" };
+    });
   }
   const visibleClients = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -92,7 +139,7 @@ export default function ClientsPage() {
           Search
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => setPrefs((p) => ({ ...p, query: e.target.value }))}
             placeholder="Name..."
           />
         </label>
@@ -100,7 +147,12 @@ export default function ClientsPage() {
           Status
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as "all" | ClientStatus)}
+            onChange={(e) =>
+              setPrefs((p) => ({
+                ...p,
+                status: e.target.value as "all" | ClientStatus,
+              }))
+            }
           >
             <option value="all">all</option>
             <option value="active">active</option>
@@ -111,7 +163,9 @@ export default function ClientsPage() {
           Sort
           <select
             value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as sortKey)}
+            onChange={(e) =>
+              setPrefs((p) => ({ ...p, sortKey: e.target.value as SortKey }))
+            }
           >
             <option value="updatedAt">updated</option>
             <option value="name">name</option>
@@ -119,9 +173,27 @@ export default function ClientsPage() {
         </label>
         <button
           type="button"
-          onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+          onClick={() =>
+            setPrefs((p) => ({
+              ...p,
+              sortDir: p.sortDir === "asc" ? "desc" : "asc",
+            }))
+          }
         >
           Direction: {sortDir}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setPrefs({
+              query: "",
+              status: "all",
+              sortKey: "updatedAt",
+              sortDir: "desc",
+            })
+          }
+        >
+          Reset
         </button>
         <div style={{ marginLeft: "auto", opacity: 0.8 }}>
           Showing: {visibleClients.length}
